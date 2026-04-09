@@ -26,6 +26,7 @@ import {
   stopContainer,
 } from './container-runtime.js';
 import { detectAuthMode } from './credential-proxy.js';
+import { readEnvFile } from './env.js';
 import { validateAdditionalMounts } from './mount-security.js';
 import { RegisteredGroup } from './types.js';
 
@@ -248,6 +249,12 @@ function buildContainerArgs(
     '-e',
     `ANTHROPIC_BASE_URL=http://${CONTAINER_HOST_GATEWAY}:${CREDENTIAL_PROXY_PORT}`,
   );
+
+  // Forward ANTHROPIC_MODEL so the user can pin a specific Claude model in .env
+  const modelOverride = readEnvFile(['ANTHROPIC_MODEL']).ANTHROPIC_MODEL;
+  if (modelOverride) {
+    args.push('-e', `ANTHROPIC_MODEL=${modelOverride}`);
+  }
 
   // Mirror the host's auth method with a placeholder value.
   // API key mode: SDK sends x-api-key, proxy replaces with real key.
